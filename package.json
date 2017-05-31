@@ -1,6 +1,6 @@
 {
   "name": "massive",
-  "version": "2.6.4",
+  "version": "3.0.0-rc1",
   "description": "A small query tool for Postgres that embraces json and makes life simpler",
   "main": "index.js",
   "bin": {
@@ -14,7 +14,8 @@
     "test": "nyc --reporter=html --reporter=text mocha",
     "lint": "eslint '.'",
     "posttest": "npm run lint",
-    "version": "rm -rf ./docs/api && jsdoc -d ./docs/api -c ./.jsdoc.json -r"
+    "apidocs": "rm -rf ./docs/api && jsdoc -d ./docs/api -c ./.jsdoc.json -r",
+    "preversion": "npm run apidocs && git add docs/api && git commit -m 'update api docs'"
   },
   "keywords": [
     "postgres",
