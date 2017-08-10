@@ -43,7 +43,10 @@
 
 
     <section>
-        <article><h1>Massive.js 3.0: A Postgres-centric Data Access Tool</h1><p><a href="https://travis-ci.org/dmfay/massive-js"><img src="https://travis-ci.org/dmfay/massive-js.svg?branch=master" alt="Build Status"></a></p>
+        <article><h1>Massive.js 3.0: A Postgres-centric Data Access Tool</h1><p><a href="https://travis-ci.org/dmfay/massive-js"><img src="https://travis-ci.org/dmfay/massive-js.svg?branch=master" alt="Build Status"></a>
+<a href="https://coveralls.io/github/dmfay/massive-js"><img src="https://coveralls.io/repos/github/dmfay/massive-js/badge.svg" alt="Coverage Status"></a>
+<a href="https://greenkeeper.io/"><img src="https://badges.greenkeeper.io/dmfay/massive-js.svg" alt="Greenkeeper badge"></a>
+<a href="https://npmjs.org/package/massive"><img src="https://img.shields.io/npm/dw/massive.svg" alt="npm"></a></p>
 <p>Massive.js is a data mapper for Node.js that goes all in on PostgreSQL and fully embraces the power and flexibility of the SQL language and relational metaphors. Providing minimal abstractions for the interfaces and tools you already use, its goal is to do just enough to make working with your data as easy and intuitive as possible, then get out of your way.</p>
 <p>Massive is <em>not</em> an object-relational mapper (ORM)! It doesn't use models, it doesn't track state, and it doesn't limit you to a single entity-based metaphor for accessing and persisting data. You've already got a data model: your schema. Massive introspects your database at runtime and returns a connected instance with your tables, views, functions, and scripts attached and ready to query, write, or execute.</p>
 <p>Here are some of the high points:</p>
@@ -79,7 +82,7 @@
 <li><a href="#contributing">Contributing</a></li>
 </ul>
 <!-- vim-markdown-toc -->
-<h2>Installation</h2><pre class="prettyprint source"><code>npm i massive --save</code></pre><p><strong>Starting with version 3, Massive uses Promises exclusively. If you need a callback-based API, download version 2.x from <a href="https://github.com/dmfay/massive-js/releases">the Releases page</a>.</strong></p>
+<h2>Installation</h2><pre class="prettyprint source"><code>npm i massive --save</code></pre><p><strong>Starting with version 3, Massive requires ES6 support and uses Promises exclusively. If you need a callback-based API or are using a pre-6.x release of Node.js, download version 2.x from <a href="https://github.com/dmfay/massive-js/releases">the Releases page</a>.</strong></p>
 <p>Examples are presented using the standard <code>then()</code> construction for compatibility, but use of ES2017 <code>async</code> and <code>await</code> or a flow control library such as <a href="https://github.com/tj/co">co</a> to manage promises is highly recommended.</p>
 <h2>Quickstart</h2><p>Once installed, <code>require</code> the library and connect to your database with a parameter object or connection string:</p>
 <pre class="prettyprint source lang-javascript"><code>const massive = require('massive');
@@ -121,15 +124,15 @@ db.auth.users.find(...).then(...);</code></pre><h4>Criteria Objects</h4><p>Many 
 <h4>Query Options</h4><p>The finder functions -- <code>find</code>, <code>findOne</code>, <code>findDoc</code>, <code>search</code>, and <code>searchDoc</code> -- allow usage of an options object as the second argument. Like the criteria object, this is an ordinary JavaScript map; however, the field names are fixed. Any field may be omitted if not needed.</p>
 <pre class="prettyprint source lang-javascript"><code>{
   build: true,                    // return query text and parameters without executing anything
-  document: true,                 // query is against a document table (see below)
+  document: true,                 // treat table as a document store (see 'Documents')
   order: 'id desc',               // creates an ORDER BY clause to enforce sorting
-  orderBody: true,                // force order to apply to fields in a document body instead of the table fields
+  orderBody: true,                // order applies to document body fields instead of table columns
   offset: 20,                     // adds an OFFSET to skip the first n rows
   limit: 10,                      // adds a LIMIT to restrict the number of rows returned
-  single: true,                   // force returning the first result object instead of a results array
+  single: true,                   // return the first result row as an object instead of all rows
   stream: true,                   // return results as a readable stream (see below)
-  only: true                      // restrict the query to the target table, ignoring descendant tables
-}</code></pre><h4>Querying</h4><p><strong>findOne</strong> finds a single object with a primary key or a criteria object.</p>
+  only: true                      // ignore tables inheriting from the target table
+}</code></pre><h4>Querying</h4><p><code>findOne</code> finds a single object with a primary key or a criteria object.</p>
 <pre class="prettyprint source lang-javascript"><code>db.tests.findOne(1).then(test1 => {
   // the test with ID 1
 });
@@ -138,7 +141,7 @@ db.tests.findOne({
   is_active: true,
   'version >': 1,
   'name ilike': 'home%'
-}).then(tests => {
+}).then(test => {
   // the first active test with a higher version and a name matching ILIKE criteria
 });</code></pre><p><code>find</code> is a general-purpose query function which returns a result list.</p>
 <pre class="prettyprint source lang-javascript"><code>db.tests.find({
@@ -228,10 +231,11 @@ db.tests.update({
     numbers: [4, 4, 4, 3, 7]
   }]
 }).then(report => {
-  // the reports table has been created and the initial document is assigned a primary key value and returned
+  // the reports table has been created and the initial document
+  // is assigned a primary key value and returned
 });</code></pre><p>If the document table already exists, <code>saveDoc</code> can be invoked on it just as the standard table functions are. This function performs an insert if no <code>id</code> is provided, or an update otherwise. The entire document will be added or modified; for partial changes, use <code>modify</code>.</p>
 <pre class="prettyprint source lang-javascript"><code>db.reports.saveDoc({
-  id: 1,  // omit in order to insert
+  id: 1,                          // omit in order to insert
   title: 'Week 12 Throughput',
   lines: [{
     name: '1 East',
@@ -242,17 +246,23 @@ db.tests.update({
   }]
 }).then(report => {
   // the newly created report
-});</code></pre><p><code>modify</code> adds and updates fields in an existing document (or any JSON/JSONB column) <em>without</em> replacing the entire body. Fields not defined in the <code>changes</code> object are not modified.</p>
+});</code></pre><p><code>modify</code> adds and updates fields in an existing document or documents (via id or criteria object) <em>without</em> replacing the entire body. Fields not defined in the <code>changes</code> object are not modified. <code>modify</code> may be used with any JSON or JSONB column, not just with document tables, but there are some behavioral differences; for more information, see the full documentation.</p>
 <pre class="prettyprint source lang-javascript"><code>db.reports.modify(1, {
   title: 'Week 11 Throughput'
 }).then(report => {
   // the updated report, with a changed 'title' attribute
 });
 
-db.products.modify(1, {
+db.products.modify({
+  type: 'widget'
+}, {
   colors: ['gray', 'purple', 'red']
-}, 'info').then(widget => {
-  // the product with an 'info' field containing the colors array
+}, 'info').then(widgets => {
+  // an array of widgets, now in at least three colors.
+  // since products is not a document table (note the
+  // 'info' field was specified to update), the 'type'
+  // is tested against a column named type rather than
+  // a key in the info JSON or JSONB column.
 });</code></pre><p>Much of the standard queryable API has corresponding functionality with document tables. Document query functions only use criteria objects and (in the case of <code>findDoc</code>) primary key values. Simple criteria objects, testing equality only, can leverage the GIN index on the document table for improved performance.</p>
 <pre class="prettyprint source lang-javascript"><code>db.reports.countDoc({
   'title ilike': '%throughput%'
@@ -289,12 +299,13 @@ db.reports.searchDoc({
 });
 
 db.myTestQueries.restartTests([5, true]).then(results => {
-  // this runs the prepared statement in db/myTestQueries/restartTests.sql with the above parameters and returns any output from a RETURNING clause
-});</code></pre><p>Like <code>run</code>, prepared statements in script files can use named parameters instead of <code>$1</code>-style indexed parameters. Named parameters are formatted <code>${name}</code>. Other delimiters besides braces are supported; consult the pg-promise documentation for a full accounting.</p>
+  // this runs the prepared statement in db/myTestQueries/restartTests.sql with
+  // the above parameters and returns any output from a RETURNING clause
+});</code></pre><p>Like <code>run</code>, prepared statements in script files can use <a href="https://github.com/vitaly-t/pg-promise#named-parameters">Named Parameters</a> instead of <code>$1</code>-style indexed parameters. <a href="https://github.com/vitaly-t/pg-promise#named-parameters">Named Parameters</a> support syntax <code>${name}</code>, <code>$(name)</code>, <code>$[name]</code>, <code>&lt;name&gt;</code> and <code>$/name/</code>.</p>
 <pre class="prettyprint source lang-javascript"><code>db.myTestQueries.restartTests({category: 5, force: true}).then(results => {
   // as above; the prepared statement should use ${category} and ${force} instead of $1 and $2.
 });</code></pre><h3>Streams</h3><p>To improve performance with large result sets, you might want to consider using a stream instead of getting your results in an array all at once. This has the upside of returning <em>something</em> to read right away (which can be a big deal for slow queries too!), but the price is that the connection remains open until you're done. To turn on streaming, add <code>{stream: true}</code> to your options object.</p>
-<pre class="prettyprint source lang-js"><code>db.tests.find({priority: 'low'}, {stream: true}).then(stream => {
+<pre class="prettyprint source lang-javascript"><code>db.tests.find({priority: 'low'}, {stream: true}).then(stream => {
   const tests = [];
 
   stream.on('readable', () => {
@@ -304,7 +315,7 @@ db.myTestQueries.restartTests([5, true]).then(results => {
   stream.on('end', () => {
     // do something with tests here
   });
-});</code></pre><h3>Accessing the Driver</h3><p>Massive is focused on convenience and simplicity, not completeness. There will always be features we don't cover; that's why there's <code>db.run</code> for arbitrary queries. In the same vein, Massive exposes the <a href="https://github.com/vitaly-t/pg-promise">pg-promise</a> driver as <code>db.driver</code> so client code can easily use its lower-level functions when necessary.</p>
+});</code></pre><h3>Accessing the Driver</h3><p>Massive is focused on convenience and simplicity, not completeness. There will always be features we don't cover; that's why there's <code>db.run</code> for arbitrary queries. In the same vein, Massive exposes the <a href="https://github.com/vitaly-t/pg-promise">pg-promise</a> driver (as <code>db.pgp</code>) and connected <a href="http://vitaly-t.github.io/pg-promise/Database.html">Database</a> instance (as <code>db.instance</code>) so client code can easily use its lower-level functions when necessary.</p>
 <h2>REPL</h2><p>Massive.js ships with a REPL (read-evaluate-print loop), an interactive console that lets you connect to a database and execute JavaScript code. The easiest way to run it is to install globally:</p>
 <pre class="prettyprint source"><code>npm i -g massive</code></pre><p>You can then fire up a connection and start writing JavaScript:</p>
 <pre class="prettyprint source"><code>massive -d appdb
@@ -317,7 +328,7 @@ db > db.tests.find({priority: 'low'}).then(...);</code></pre><p>In addition to t
 <p>When invoking functions, you may omit the <code>then</code> if you just want to see output -- Massive provides a resolver which logs the results to make it easy to query with the REPL.</p>
 <p>Exit the REPL by pressing Ctrl-C twice.</p>
 <h2>Older Versions</h2><p>Release versions are tagged and available <a href="https://github.com/dmfay/massive-js/releases">here</a>.</p>
-<p>Documentation for Massive.js 2.x is at <a href="http://massive-js.readthedocs.org/en/latest/">readthedocs</a>.</p>
+<p>Documentation for Massive.js 2.x is at <a href="http://massive-js.readthedocs.org/en/v2/">readthedocs</a>.</p>
 <h2>Contributing</h2><p>Issues and especially pull requests are welcome! If you've found a bug, please include a minimal code sample I can use to hunt the problem down.</p>
 <p>To run the tests, first create an empty <code>massive</code> database. The <code>postgres</code> superuser should have <code>trust</code> authentication enabled for local socket connections.</p>
 <pre class="prettyprint source"><code>createdb massive</code></pre><p>Run the tests with npm:</p>
@@ -332,13 +343,13 @@ db > db.tests.find({priority: 'low'}).then(...);</code></pre><p>In addition to t
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-massive.html">massive</a></li><li><a href="module-mutators.html">mutators</a></li><li><a href="module-operations.html">operations</a></li><li><a href="module-where.html">where</a></li></ul><h3>Classes</h3><ul><li><a href="Entity.html">Entity</a></li><li><a href="Executable.html">Executable</a></li><li><a href="Massive.html">Massive</a></li><li><a href="Query.html">Query</a></li><li><a href="Queryable.html">Queryable</a></li><li><a href="SingleValueStream.html">SingleValueStream</a></li><li><a href="Table.html">Table</a></li></ul><h3>Global</h3><ul><li><a href="global.html"></a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-massive.html">massive</a></li><li><a href="module-mutators.html">mutators</a></li><li><a href="module-operations.html">operations</a></li><li><a href="module-where.html">where</a></li></ul><h3>Classes</h3><ul><li><a href="Delete.html">Delete</a></li><li><a href="Entity.html">Entity</a></li><li><a href="Executable.html">Executable</a></li><li><a href="Insert.html">Insert</a></li><li><a href="Massive.html">Massive</a></li><li><a href="Queryable.html">Queryable</a></li><li><a href="Select.html">Select</a></li><li><a href="SingleValueStream.html">SingleValueStream</a></li><li><a href="Table.html">Table</a></li><li><a href="Update.html">Update</a></li></ul><h3>Global</h3><ul><li><a href="global.html"></a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue May 30 2017 22:31:06 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Sat Jul 22 2017 02:09:31 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>

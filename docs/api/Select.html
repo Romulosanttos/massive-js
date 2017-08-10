@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: Query</title>
+    <title>JSDoc: Class: Select</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: Query</h1>
+    <h1 class="page-title">Class: Select</h1>
 
     
 
@@ -28,7 +28,7 @@
 
 <header>
     
-        <h2>Query</h2>
+        <h2><span class="attribs"><span class="type-signature"></span></span>Select<span class="signature">(source, criteria, options)</span><span class="type-signature"></span></h2>
         
     
 </header>
@@ -40,7 +40,9 @@
 
     
 
-    <h4 class="name" id="Query"><span class="type-signature"></span>new Query<span class="signature">(conditions, options, object)</span><span class="type-signature"></span></h4>
+    
+    <h4 class="name" id="Select"><span class="type-signature"></span>new Select<span class="signature">(source, criteria, options)</span><span class="type-signature"></span></h4>
+    
 
     
 
@@ -83,7 +85,30 @@
 
         <tr>
             
-                <td class="name"><code>conditions</code></td>
+                <td class="name"><code>source</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Queryable.html">Queryable</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Database object to query.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>criteria</code></td>
             
 
             <td class="type">
@@ -161,6 +186,9 @@ predicate, or primitive pk value.</td>
             <td class="type">
             
                 
+<span class="param-type">Array</span>
+|
+
 <span class="param-type">String</span>
 
 
@@ -171,7 +199,7 @@ predicate, or primitive pk value.</td>
 
             
 
-            <td class="description last">SELECT list.</td>
+            <td class="description last">Change the SELECT list.</td>
         </tr>
 
     
@@ -255,6 +283,9 @@ ignoring any descendant tables.</td>
             
                 
 <span class="param-type">Object</span>
+|
+
+<span class="param-type">String</span>
 
 
             
@@ -264,8 +295,9 @@ ignoring any descendant tables.</td>
 
             
 
-            <td class="description last">Key-value dictionary of ordering fields and
-direction.</td>
+            <td class="description last">Key-value dictionary of ordering
+fields and direction, or a string containing fields and directions to be
+interpolated directly.</td>
         </tr>
 
     
@@ -396,29 +428,6 @@ resultset.</td>
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>object</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Database object to query.</td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -456,7 +465,7 @@ resultset.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_query_query.js.html">lib/query/query.js</a>, <a href="lib_query_query.js.html#line33">line 33</a>
+        <a href="lib_statement_select.js.html">lib/statement/select.js</a>, <a href="lib_statement_select.js.html#line34">line 34</a>
     </li></ul></dd>
     
 
@@ -466,6 +475,8 @@ resultset.</td>
 
     
 </dl>
+
+
 
 
 
@@ -491,7 +502,9 @@ resultset.</td>
 
     
 
-     
+    
+
+    
 
     
 
@@ -505,14 +518,16 @@ resultset.</td>
 
     
 
+    
     <h4 class="name" id="format"><span class="type-signature"></span>format<span class="signature">()</span><span class="type-signature"></span></h4>
+    
 
     
 
 
 
 <div class="description">
-    Format a full SQL statement from this Query.
+    Format this object into a SQL SELECT.
 </div>
 
 
@@ -556,7 +571,7 @@ resultset.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_query_query.js.html">lib/query/query.js</a>, <a href="lib_query_query.js.html#line83">line 83</a>
+        <a href="lib_statement_select.js.html">lib/statement/select.js</a>, <a href="lib_statement_select.js.html#line86">line 86</a>
     </li></ul></dd>
     
 
@@ -568,86 +583,6 @@ resultset.</td>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="selectList"><span class="type-signature"></span>selectList<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Generate a SELECT list for this Query.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="lib_query_query.js.html">lib/query/query.js</a>, <a href="lib_query_query.js.html#line92">line 92</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
 
 
 
@@ -680,13 +615,13 @@ resultset.</td>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-massive.html">massive</a></li><li><a href="module-mutators.html">mutators</a></li><li><a href="module-operations.html">operations</a></li><li><a href="module-where.html">where</a></li></ul><h3>Classes</h3><ul><li><a href="Entity.html">Entity</a></li><li><a href="Executable.html">Executable</a></li><li><a href="Massive.html">Massive</a></li><li><a href="Query.html">Query</a></li><li><a href="Queryable.html">Queryable</a></li><li><a href="SingleValueStream.html">SingleValueStream</a></li><li><a href="Table.html">Table</a></li></ul><h3>Global</h3><ul><li><a href="global.html"></a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-massive.html">massive</a></li><li><a href="module-mutators.html">mutators</a></li><li><a href="module-operations.html">operations</a></li><li><a href="module-where.html">where</a></li></ul><h3>Classes</h3><ul><li><a href="Delete.html">Delete</a></li><li><a href="Entity.html">Entity</a></li><li><a href="Executable.html">Executable</a></li><li><a href="Insert.html">Insert</a></li><li><a href="Massive.html">Massive</a></li><li><a href="Queryable.html">Queryable</a></li><li><a href="Select.html">Select</a></li><li><a href="SingleValueStream.html">SingleValueStream</a></li><li><a href="Table.html">Table</a></li><li><a href="Update.html">Update</a></li></ul><h3>Global</h3><ul><li><a href="global.html"></a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.3</a> on Tue May 30 2017 22:31:06 GMT-0400 (EDT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.3</a> on Sat Jul 22 2017 02:09:31 GMT-0400 (EDT)
 </footer>
 
 <script> prettyPrint(); </script>

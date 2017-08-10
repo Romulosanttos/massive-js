@@ -7,6 +7,10 @@ describe('destroy', function () {
     return resetDb().then(instance => db = instance);
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   it('deletes a product', function* () {
     const deleted = yield db.products.destroy({id: 4});
     assert.lengthOf(deleted, 1);
@@ -25,7 +29,7 @@ describe('destroy', function () {
   });
 
   it('deletes by matching json', function* () {
-    const deleted = yield db.docs.destroy({'body->>title': 'A Document'});
+    const deleted = yield db.docs.destroy({'body->>title': 'Document 1'});
     assert.equal(deleted.length, 1);
 
     const found = yield db.docs.find({id: deleted[0].id});
@@ -33,7 +37,7 @@ describe('destroy', function () {
   });
 
   it('deletes by matching json with whitespace', function* () {
-    const deleted = yield db.docs.destroy({'body ->> title': 'Another Document'});
+    const deleted = yield db.docs.destroy({'body ->> title': 'Document 2'});
     assert.equal(deleted.length, 1);
 
     const found = yield db.docs.find({id: deleted[0].id});
@@ -41,7 +45,7 @@ describe('destroy', function () {
   });
 
   it('deletes by matching json with quotes', function* () {
-    const deleted = yield db.docs.destroy({'"body" ->> \'title\'': 'Starsky and Hutch'});
+    const deleted = yield db.docs.destroy({'"body" ->> \'title\'': 'Document 3'});
     assert.equal(deleted.length, 1);
 
     const found = yield db.docs.find({id: deleted[0].id});
@@ -67,5 +71,14 @@ describe('destroy', function () {
 
     const foundAfter = yield db.orders.findOne({id: foundBefore.id});
     assert.notOk(foundAfter);
+  });
+
+  it('applies options', function () {
+    return db.products.destroy({id: 1}, {build: true}).then(res => {
+      assert.deepEqual(res, {
+        sql: 'DELETE FROM "products" WHERE "id" = $1 RETURNING *',
+        params: [1]
+      });
+    });
   });
 });

@@ -7,6 +7,10 @@ describe('foreign tables', function () {
     return resetDb('foreign-tables').then(instance => db = instance);
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   it('loads foreign tables', function () {
     assert.isOk(db.foreigntable);
   });
@@ -29,7 +33,7 @@ describe('foreign tables', function () {
   });
 
   it('cannot use the single-object update with foreign tables', function () {
-    assert.throws(() => db.foreigntable.update({id: 1}), 'foreigntable has no primary key, use the (criteria, changes) update');
+    assert.throws(() => db.foreigntable.update({id: 1}), 'foreigntable has no primary key, use update(criteria, changes)');
   });
 });
 
