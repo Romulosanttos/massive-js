@@ -4,12 +4,18 @@ describe('modify', function () {
   let db;
   let newDoc = {};
 
-  before(function(){
-    return resetDb().then(instance => db = instance);
+  before(function() {
+    return resetDb()
+      .then(instance => db = instance)
+      .then(() => {
+        return db.saveDoc('docs', {name: 'foo'});
+      }).then(doc => newDoc = doc);
   });
 
-  before(function() {
-    return db.saveDoc('docs', {name: 'foo'}).then(doc => newDoc = doc);
+  after(function () {
+    return db.docs.destroy({id: newDoc.id}).then(() => {
+      return db.instance.$pool.end();
+    });
   });
 
   it('adds new information to the document', function() {
@@ -50,7 +56,24 @@ describe('modify', function () {
     });
   });
 
-  after(function () {
-    return db.docs.destroy({id: newDoc.id});
+  it('uses criteria objects', function() {
+    return db.docs.modify({name: 'foo'}, {appliedCriteria: true}).then(docs => {
+      assert.lengthOf(docs, 1);
+      assert.isTrue(docs[0].appliedCriteria);
+    });
+  });
+
+  it('works with non-document json fields by id', function() {
+    return db.products.modify(2, {appliedCriteria: true}, 'specs').then(product => {
+      assert.isOk(product);
+      assert.isTrue(product.specs.appliedCriteria);
+    });
+  });
+
+  it('works with non-document json fields by *row* criteria', function() {
+    return db.products.modify({name: 'Product 3'}, {appliedCriteria: true}, 'specs').then(products => {
+      assert.lengthOf(products, 1);
+      assert.isTrue(products[0].specs.appliedCriteria);
+    });
   });
 });

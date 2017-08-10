@@ -18,3 +18,4 @@ out
 .nyc_output
 docs/_site
 docs/.sass-cache
+.vscode

@@ -7,6 +7,10 @@ describe('find', function () {
     return resetDb().then(instance => db = instance);
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   describe('all records', function () {
     it('returns all records on find with no args', function () {
       return db.products.find().then(res => assert.lengthOf(res, 4));
@@ -88,6 +92,18 @@ describe('find', function () {
         assert.equal(res[0].id, 1);
       });
     });
+    it('returns products using is null', function () {
+      return db.products.find({'tags is': null}).then(res => {
+        assert.lengthOf(res, 1);
+        assert.equal(res[0].id, 1);
+      });
+    });
+    it('returns products using is not null', function () {
+      return db.products.find({'id is not': null}).then(res => {
+        assert.lengthOf(res, 4);
+        assert.equal(res[0].id, 1);
+      });
+});
     it('returns products using distinct from', function () {
       return db.products.find({'tags is distinct from': '{tag1,tag2}'}).then(res => assert.lengthOf(res, 3));
     });
@@ -276,9 +292,9 @@ describe('find', function () {
 
   describe('document generator', function () {
     it('finds a doc by title', function () {
-      return db.docs.find({title: 'A Document'}, {document: true, generator: 'docGenerator'}).then(docs => {
-        //find will return multiple if id not specified... confusing?
-        assert.equal(docs[0].title, 'A Document');
+      return db.docs.find({title: 'Document 1'}, {document: true, generator: 'docGenerator'}).then(docs => {
+        // TODO find will return multiple if id not specified... confusing?
+        assert.equal(docs[0].title, 'Document 1');
       });
     });
 
@@ -296,10 +312,10 @@ describe('find', function () {
       // nb: no parsing the key here -- it has to be exactly as you'd paste it into psql
       return db.docs.find('*', {order: 'body->>\'title\' desc', document: true, generator: 'docGenerator'}).then(docs => {
         assert.lengthOf(docs, 4);
-        assert.equal(docs[0].title, 'Starsky and Hutch');
-        assert.equal(docs[1].title, 'A Third Document');
-        assert.equal(docs[2].title, 'Another Document');
-        assert.equal(docs[3].title, 'A Document');
+        assert.equal(docs[0].title, 'Something Else');
+        assert.equal(docs[1].title, 'Document 3');
+        assert.equal(docs[2].title, 'Document 2');
+        assert.equal(docs[3].title, 'Document 1');
       });
     });
 
@@ -311,10 +327,10 @@ describe('find', function () {
         generator: 'docGenerator'
       }).then(docs => {
         assert.lengthOf(docs, 4);
-        assert.equal(docs[0].title, 'Starsky and Hutch');
-        assert.equal(docs[1].title, 'A Third Document');
-        assert.equal(docs[2].title, 'Another Document');
-        assert.equal(docs[3].title, 'A Document');
+        assert.equal(docs[0].title, 'Something Else');
+        assert.equal(docs[1].title, 'Document 3');
+        assert.equal(docs[2].title, 'Document 2');
+        assert.equal(docs[3].title, 'Document 1');
       });
     });
   });
@@ -431,8 +447,8 @@ describe('find', function () {
         assert.equal(res[0].id, 4);
       });
     });
-    it('runs with an empty WHERE clause if you try to search by pk', function () {
-      return db.popular_products.find(1).then(res => assert.lengthOf(res, 3));
+    it('rejects if you try to search by pk', function () {
+      return db.popular_products.find(1).then(() => { assert.fail(); }).catch(() => {});
     });
   });
 

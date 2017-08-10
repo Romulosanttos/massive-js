@@ -7,6 +7,10 @@ describe('insert', function () {
     return resetDb().then(instance => db = instance);
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   it('inserts a record', function () {
     return db.products.insert({name: "A Product"}).then(res => {
       assert.equal(res.name, "A Product");
@@ -54,6 +58,15 @@ describe('insert', function () {
     return db.products.insert({name: null}).catch(err => {
       assert.equal(err.code, '23502');
       assert.notEqual(err.detail, undefined);
+    });
+  });
+
+  it('applies options', function () {
+    return db.products.insert({name: 'another kind of product'}, {build: true}).then(res => {
+      assert.deepEqual(res, {
+        sql: 'INSERT INTO "products" ("name") VALUES ($1) RETURNING *',
+        params: ['another kind of product']
+      });
     });
   });
 });

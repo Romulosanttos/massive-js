@@ -7,6 +7,10 @@ describe('findOne', function () {
     return resetDb().then(instance => db = instance);
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   describe('all records', function () {
     it('returns first record with findOne no args', function () {
       return db.products.findOne().then(res => assert.equal(res.id, 1));
@@ -31,12 +35,12 @@ describe('findOne', function () {
   });
 
   describe('no records', function () {
-    it('returns undefined with a primary key', function () {
-      return db.products.findOne(35565).then(res => assert.isUndefined(res));
+    it('returns null with a primary key', function () {
+      return db.products.findOne(35565).then(res => assert.isNull(res));
     });
 
-    it('returns undefined with a criteria object', function () {
-      return db.products.findOne({id: 35565}).then(res => assert.isUndefined(res));
+    it('returns null with a criteria object', function () {
+      return db.products.findOne({id: 35565}).then(res => assert.isNull(res));
     });
   });
 });

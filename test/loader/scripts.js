@@ -10,6 +10,10 @@ describe('scripts', function () {
     db = yield resetDb();
   });
 
+  after(function () {
+    return db.instance.$pool.end();
+  });
+
   it('should query for a list of scripts', function* () {
     const scripts = yield loader(db, {scripts: path.resolve(__dirname, '../helpers/scripts/loader')});
 
@@ -18,6 +22,6 @@ describe('scripts', function () {
     assert.isTrue(scripts[0].hasOwnProperty('name'));
     assert.isTrue(scripts[0].hasOwnProperty('schema'));
     assert.isTrue(scripts[0].hasOwnProperty('sql'));
-    assert.isTrue(scripts[0].hasOwnProperty('filePath'));
+    assert.instanceOf(scripts[0].sql, pgp.QueryFile);
   });
 });

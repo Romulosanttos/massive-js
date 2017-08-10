@@ -1,38 +1,35 @@
 'use strict';
 
-const where = require('../../lib/query/where');
-const ops = require('../../lib/query/operations');
+const where = require('../../lib/statement/where');
+const ops = require('../../lib/statement/operations');
 
 describe('WHERE clause generation', function () {
   describe('module', function () {
-    it('should create an empty WHERE clause', function () {
+    it('should return a safe value for empty criteria', function () {
       const result = where({});
-      assert.equal(result.conditions, '\nWHERE TRUE');
+      assert.equal(result.conditions, 'TRUE');
       assert.equal(result.params.length, 0);
     });
 
-    it('should create a basic WHERE clause', function () {
+    it('should create basic criteria', function () {
       const result = where({field: 'value'});
-      assert.equal(result.conditions, '\nWHERE "field" = $1');
+      assert.equal(result.conditions, '"field" = $1');
       assert.equal(result.params.length, 1);
       assert.equal(result.params[0], 'value');
     });
 
     it('should AND together predicates', function () {
       const result = where({field1: 'value1', field2: 'value2'});
-      assert.equal(result.conditions, '\nWHERE "field1" = $1 \nAND "field2" = $2');
+      assert.equal(result.conditions, '"field1" = $1 AND "field2" = $2');
       assert.equal(result.params.length, 2);
       assert.equal(result.params[0], 'value1');
       assert.equal(result.params[1], 'value2');
     });
 
-    // TODO add conditions check below
-    it('should return predicates and parameters', function () {
+    it('should return conditions and parameters', function () {
       const result = where({field1: 'value1', field2: 'value2'});
 
-      assert.equal(result.predicates.length, 2);
-      assert.equal(result.predicates[0], '"field1" = $1');
-      assert.equal(result.predicates[1], '"field2" = $2');
+      assert.equal(result.conditions, '"field1" = $1 AND "field2" = $2');
       assert.equal(result.params.length, 2);
       assert.equal(result.params[0], 'value1');
       assert.equal(result.params[1], 'value2');
@@ -42,8 +39,7 @@ describe('WHERE clause generation', function () {
       it('should stringify numbers', function () {
         const result = where({'json->>field': 123});
 
-        assert.lengthOf(result.predicates, 1);
-        assert.equal(result.predicates[0], '"json"->>\'field\' = $1');
+        assert.equal(result.conditions, '"json"->>\'field\' = $1');
         assert.lengthOf(result.params, 1);
         assert.equal(result.params[0], '123');
         assert.typeOf(result.params[0], 'string');
@@ -52,8 +48,7 @@ describe('WHERE clause generation', function () {
       it('should stringify booleans', function () {
         const result = where({'json->>field': true});
 
-        assert.lengthOf(result.predicates, 1);
-        assert.equal(result.predicates[0], '"json"->>\'field\' = $1');
+        assert.equal(result.conditions, '"json"->>\'field\' = $1');
         assert.lengthOf(result.params, 1);
         assert.equal(result.params[0], 'true');
         assert.typeOf(result.params[0], 'string');
@@ -63,8 +58,7 @@ describe('WHERE clause generation', function () {
         const date = new Date();
         const result = where({'json->>field': date});
 
-        assert.lengthOf(result.predicates, 1);
-        assert.equal(result.predicates[0], '"json"->>\'field\' = $1');
+        assert.equal(result.conditions, '"json"->>\'field\' = $1');
         assert.lengthOf(result.params, 1);
         assert.equal(result.params[0], date.toString());
         assert.typeOf(result.params[0], 'string');
@@ -73,8 +67,7 @@ describe('WHERE clause generation', function () {
       it('should stringify individual items in arrays', function () {
         const result = where({'json->>field': [1, 2, 3]});
 
-        assert.lengthOf(result.predicates, 1);
-        assert.equal(result.predicates[0], '"json"->>\'field\' IN ($1,$2,$3)');
+        assert.equal(result.conditions, '"json"->>\'field\' IN ($1,$2,$3)');
         assert.lengthOf(result.params, 3);
         assert.deepEqual(result.params, ['1', '2', '3']);
         assert.typeOf(result.params[0], 'string');
@@ -83,8 +76,7 @@ describe('WHERE clause generation', function () {
       it('should not stringify nulls', function () {
         const result = where({'json->>field': null});
 
-        assert.lengthOf(result.predicates, 1);
-        assert.equal(result.predicates[0], '"json"->>\'field\' IS null');
+        assert.equal(result.conditions, '"json"->>\'field\' IS null');
         assert.lengthOf(result.params, 0);
       });
     });
@@ -102,8 +94,7 @@ describe('WHERE clause generation', function () {
           }
         );
 
-        assert.equal(result.predicates.length, 1);
-        assert.equal(result.predicates[0], '(("field1" = $1) OR ("field2" = $2 AND "field3" = $3) OR ("field4" = $4))');
+        assert.equal(result.conditions, '(("field1" = $1) OR ("field2" = $2 AND "field3" = $3) OR ("field4" = $4))');
         assert.equal(result.params.length, 4);
         assert.equal(result.params[0], 'value1');
         assert.equal(result.params[1], 'value2');
@@ -117,9 +108,7 @@ describe('WHERE clause generation', function () {
           field3: 'value3'
         });
 
-        assert.equal(result.predicates.length, 2);
-        assert.equal(result.predicates[0], '(("field1" = $1) OR ("field2" = $2))');
-        assert.equal(result.predicates[1], '"field3" = $3');
+        assert.equal(result.conditions, '(("field1" = $1) OR ("field2" = $2)) AND "field3" = $3');
         assert.equal(result.params.length, 3);
         assert.equal(result.params[0], 'value1');
         assert.equal(result.params[1], 'value2');
@@ -129,8 +118,7 @@ describe('WHERE clause generation', function () {
       it('should return a usable predicate if only given one subgroup', function () {
         const result = where({or: [{field1: 'value1'}]});
 
-        assert.equal(result.predicates.length, 1);
-        assert.equal(result.predicates[0], '(("field1" = $1))');
+        assert.equal(result.conditions, '(("field1" = $1))');
         assert.equal(result.params.length, 1);
         assert.equal(result.params[0], 'value1');
       });
@@ -150,8 +138,7 @@ describe('WHERE clause generation', function () {
           }]
         });
 
-        assert.equal(result.predicates.length, 1);
-        assert.equal(result.predicates[0], '(("field1" = $1 AND (("field2" = $2) OR ("field3" = $3))) OR ("field2" = $4 AND "field3" = $5))');
+        assert.equal(result.conditions, '(("field1" = $1 AND (("field2" = $2) OR ("field3" = $3))) OR ("field2" = $4 AND "field3" = $5))');
         assert.equal(result.params.length, 5);
         assert.equal(result.params[0], 'value1');
         assert.equal(result.params[1], 'value4');
@@ -305,6 +292,30 @@ describe('WHERE clause generation', function () {
         assert.equal(result.mutator, undefined);
       });
 
+      it('should match > properly', function () {
+        var result = where.getCondition('field >');
+        assert.equal(result.rawField, 'field');
+        assert.equal(result.field, '"field"');
+        assert.equal(result.operation.operator, '>');
+        assert.equal(result.mutator, undefined);
+      });
+
+      it('should match >= properly', function () {
+        var result = where.getCondition('field >=');
+        assert.equal(result.rawField, 'field');
+        assert.equal(result.field, '"field"');
+        assert.equal(result.operation.operator, '>=');
+        assert.equal(result.mutator, undefined);
+      });
+
+      it('should distinguish > in traversers and operations', function () {
+        var result = where.getCondition('field->>key >=');
+        assert.equal(result.rawField, 'field');
+        assert.equal(result.field, '"field"->>\'key\'');
+        assert.equal(result.operation.operator, '>=');
+        assert.equal(result.mutator, undefined);
+      });
+
       it('should match the longest possible operator', function () {
         const result = where.getCondition('field ~~*'); // ~ and ~* are also operators
         assert.equal(result.rawField, 'field');
@@ -320,21 +331,69 @@ describe('WHERE clause generation', function () {
         assert.equal(result.operation.operator, 'LIKE');
         assert.equal(result.mutator, undefined);
       });
+
+      it('should not clobber a field with an operator in the name', function () {
+        var result = where.getCondition('is_field is');
+        assert.equal(result.rawField, 'is_field');
+        assert.equal(result.field, '"is_field"');
+        assert.equal(result.operation.operator, 'IS');
+        assert.equal(result.mutator, undefined);
+      });
+
+      it('should not clobber a quoted field with an operator in the name', function () {
+        var result = where.getCondition('"this is a field" is');
+        assert.equal(result.rawField, 'this is a field');
+        assert.equal(result.field, '"this is a field"');
+        assert.equal(result.operation.operator, 'IS');
+        assert.equal(result.mutator, undefined);
+      });
     });
 
     describe('casting', function () {
+      it('should cast fields without an operator', function () {
+        var result = where.getCondition('field::text');
+        assert.equal(result.rawField, 'field::text');
+        assert.equal(result.field, '"field"::text');
+        assert.equal(result.operation.operator, '=');
+        assert.equal(result.mutator, undefined);
+      });
+
       it('should cast fields', function () {
         const result = where.getCondition('field::text LIKE');
-        assert.equal(result.rawField, 'field');
+        assert.equal(result.rawField, 'field::text');
         assert.equal(result.field, '"field"::text');
         assert.equal(result.operation.operator, 'LIKE');
         assert.equal(result.mutator, undefined);
       });
 
+      it.skip('should cast fields with JSON operations', function () {
+        var result = where.getCondition('field->>element::boolean LIKE');
+        assert.equal(result.rawField, '(field->>\'element\')::text');
+        assert.equal(result.field, '("field"->>\'element\')::boolean');
+        assert.equal(result.operation.operator, 'LIKE');
+        assert.equal(result.mutator, undefined);
+      });
+
+      it('should cast quoted fields without an operator', function () {
+        var result = where.getCondition('"field"::text');
+        assert.equal(result.rawField, 'field::text');
+        assert.equal(result.field, '"field"::text');
+        assert.equal(result.operation.operator, '=');
+        assert.equal(result.mutator, undefined);
+      });
+
       it('should cast quoted fields', function () {
         const result = where.getCondition('"field"::text LIKE');
-        assert.equal(result.rawField, 'field');
+        assert.equal(result.rawField, 'field::text');
         assert.equal(result.field, '"field"::text');
+        assert.equal(result.operation.operator, 'LIKE');
+        assert.equal(result.mutator, undefined);
+      });
+
+      it.skip('should cast quoted fields with JSON operations', function () {
+        var result = where.getCondition('"field"->>element::boolean LIKE');
+        assert.equal(result.rawField, '(field->>\'element\')::text');
+        assert.equal(result.field, '("field"->>\'element\')::boolean');
         assert.equal(result.operation.operator, 'LIKE');
         assert.equal(result.mutator, undefined);
       });
@@ -373,6 +432,13 @@ describe('WHERE clause generation', function () {
       assert.equal(result.params.length, 0);
     });
 
+    it('should accept IS NOT explicitly', function () {
+      const condition = {field: '"field"', operation: ops('is not'), value: null, offset: 1, params: []};
+      const result = where.generator(condition);
+      assert.equal(result.predicate, '"field" IS NOT null');
+      assert.equal(result.params.length, 0);
+    });
+
     it('should apply operation mutators', function () {
       const condition = {
         field: '"field"',
@@ -405,6 +471,13 @@ describe('WHERE clause generation', function () {
       assert.equal(result.predicate, '"body" @> $1');
       assert.equal(result.params.length, 1);
       assert.equal(result.params[0], JSON.stringify(obj));
+    });
+
+    it('should create IS comparison predicate', function () {
+      const condition = {rawField: 'field', operation: ops('is'), value: true, offset: 1, params: []};
+      const result = where.docGenerator(condition, {'field is': true});
+      assert.equal(result.predicate, '("body" ->> \'field\') IS true');
+      assert.equal(result.params.length, 0);
     });
 
     it('should build an equality predicate using the JSON contains op', function () {
