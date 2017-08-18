@@ -49,18 +49,18 @@
   },
   "dependencies": {
     "args-js": "^0.10.12",
-    "async": "^2.1.4",
-    "deasync": "^0.1.9",
-    "pg": "^6.1.0",
+    "async": "^2.5.0",
+    "deasync": "^0.1.10",
+    "pg": "^7.1.2",
     "promise-polyfill": "^6.0.2",
     "strip-bom": "^3.0.0",
     "underscore": "^1.8.3",
-    "commander": "^2.6.0",
-    "glob": "^7.1.1",
+    "commander": "^2.11.0",
+    "glob": "^7.1.2",
     "lodash": "^4.17.4",
     "mz": "^2.6.0",
-    "pg-promise": "^6.4.0",
-    "pg-query-stream": "~1.0.0"
+    "pg-promise": "^6.5.0",
+    "pg-query-stream": "~1.1.1"
   },
   "devDependencies": {
     "istanbul": "^0.4.5",
