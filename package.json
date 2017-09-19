@@ -41,9 +41,14 @@
   "contributors": [
     "Karl Seguin <karl@openmymind.net>",
     "John Atten <xivsolutions@gmail.com>",
-    "Rob Conery <robconery@gmail.com>"
+    "Rob Conery <robconery@gmail.com>",
+    "Vaniel Silva <vaniel@traderclube.com>"
   ],
   "license": "BSD-3-Clause",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/SigmaST/massive-js.git"
+  },
   "dependencies": {
     "commander": "~2.11.0",
     "glob": "~7.1.1",
