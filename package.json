@@ -47,14 +47,14 @@
   "license": "BSD-3-Clause",
   "repository": {
     "type": "git",
-    "url": "git://github.com/SigmaST/massive-js.git"
+    "url": "https://github.com/dmfay/massive-js.git"
   },
   "dependencies": {
     "commander": "~2.11.0",
-    "glob": "~7.1.1",
+    "glob": "~7.1.2",
     "lodash": "~4.17.4",
-    "pg-promise": "~6.7.1",
-    "pg-query-stream": "~1.0.0"
+    "pg-promise": "~6.8.0",
+    "pg-query-stream": "~1.1.1"
   },
   "devDependencies": {
     "chai": "~4.1.0",
@@ -65,9 +65,5 @@
     "jsdoc": "^3.5.4",
     "mocha": "~3.5.1",
     "nyc": "~11.2.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/dmfay/massive-js.git"
   }
 }
