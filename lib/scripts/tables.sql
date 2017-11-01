@@ -1,5 +1,6 @@
 -- REQUIRES THREE ARGUMENTS:
 -- $1, $2, $2 all must be empty string, or comma-delimited string, or array of string:
+SELECT querytable.schema, querytable.name, querytable.parent, ARRAY_AGG(querytable.pk) AS pk, querytable.is_insertable_into FROM (
 SELECT * FROM (
   SELECT tc.table_schema AS schema, tc.table_name AS name, NULL AS parent, kc.column_name AS pk, TRUE AS is_insertable_into
   FROM information_schema.table_constraints tc
@@ -38,4 +39,6 @@ SELECT * FROM (
   CASE WHEN $3 = '' THEN 1=0
   ELSE replace((schema || '.'|| name), 'public.', '') LIKE ANY(string_to_array(replace($3, ' ', ''), ','))
   END
-);
+)
+) querytable
+GROUP BY 1, 2, 3, 5;
